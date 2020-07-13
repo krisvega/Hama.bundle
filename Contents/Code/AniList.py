@@ -15,6 +15,21 @@ GRAPHQL_API_URL = "https://graphql.anilist.co"
 ANIME_DATA_DOCUMENT = """
 query($id: Int, $malId: Int) {
   anime: Media(type: ANIME, id: $id, idMal: $malId) {
+    id,
+    title {
+      romaji
+      english
+      native
+      userPreferred
+    },
+    averageScore,
+    startDate {
+      year
+      month
+      day
+    },
+    genres,
+    status,
     coverImage {
       url: extraLarge
     }
@@ -60,6 +75,33 @@ def GetMetadata(AniDBid, MALid):
   data = MakeGraphqlQuery(ANIME_DATA_DOCUMENT, variables)
 
   if data:
+    titles = Dict(data, "anime", "title")
+    if titles:
+      title, original_title, language_rank = GetAniListTitle(titles)
+      Log.Info("[ ] language_rank: {}" .format(SaveDict(language_rank,            AniList_dict, 'language_rank')))
+      Log.Info("[ ] title: {}"         .format(SaveDict(title,                    AniList_dict, 'title')))
+      Log.Info("[ ] original_title: {}".format(SaveDict(original_title,           AniList_dict, 'original_title')))
+
+    rating = Dict(data, "anime", "averageScore")
+    if rating:
+      Log.Info("[ ] rating: {}" .format(SaveDict(float(rating) / 10,              AniList_dict, 'rating')))
+
+    startDate = Dict(data, "anime", "startDate")
+    if startDate:
+      startDateString = str(Dict(startDate, "year")) + '-' + str(Dict(startDate, "month")).zfill(2) + '-' + str(Dict(startDate, "day")).zfill(2)
+      Log.Info("[ ] originally_available_at: {}".format(SaveDict(startDateString, AniList_dict, 'originally_available_at')))
+
+    genres = Dict(data, "anime", "genres")
+    if genres:
+      Log.Info("[ ] genres: {}".format(SaveDict(sorted(genres),                   AniList_dict, 'genres')))
+
+    status = Dict(data, "anime", "status")
+    if status:
+      if status == 'RELEASING':
+        Log.Info("[ ] status: {}".format(SaveDict("Continuing",                   AniList_dict, 'status')))
+      elif status == 'FINISHED':
+        Log.Info("[ ] status: {}".format(SaveDict("Ended",                        AniList_dict, 'status')))
+
     Log.Info("--- images ---".ljust(157, "-"))
 
     posterUrl = Dict(data, "anime", "coverImage", "url")
@@ -73,3 +115,21 @@ def GetMetadata(AniDBid, MALid):
   Log.Info("--- return ---".ljust(157, '-'))
   Log.Info("AniList_dict: {}".format(DictString(AniList_dict, 4)))
   return AniList_dict
+
+def GetAniListTitle(titles):
+	languages = [language.strip() for language in Prefs['SerieLanguagePriority'].split(',')] #[ Prefs['SerieLanguage1'], Prefs['SerieLanguage2'], Prefs['SerieLanguage3'] ]  #override default language
+	if not 'main' in languages:  languages.append('main')                                    # Add main to the selection if not present in list (main nearly same as x-jat)
+	langTitles    = ["" for index in range(len(languages))]                                  # languages: title order including main title, then choosen title
+
+	for lang in languages:
+		if lang == 'main' or lang == 'x-jat':
+			langTitles[languages.index(lang)] = Dict(titles, "romaji")
+		if lang == 'en':
+			langTitles[languages.index(lang)] = Dict(titles, "english")
+		if lang == 'ja':
+			langTitles[languages.index(lang)] = Dict(titles, "native")
+
+	for index, item in enumerate(langTitles+[]):
+		if item: break
+
+	return langTitles[index], langTitles[languages.index('main') if 'main' in languages else 1 if 1 in langTitles else 0], index 
