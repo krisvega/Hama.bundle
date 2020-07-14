@@ -43,6 +43,8 @@ def LoadFileTVDB(id="", filename="", url="", headers={}):
   """
   global TVDB_AUTH_TIME
 
+  url = url + ('&' if '?' in url else '?') + 'cache-bust=' + str(Datetime.TimestampFromDatetime(Datetime.Now()))
+
   while 'LoadFileTVDB' in netLocked and netLocked['LoadFileTVDB'][0]:
     Log.Root("TheTVDBv2.LoadFileTVDB() - Waiting for lock: 'LoadFileTVDB'"); time.sleep(1)
   netLocked['LoadFileTVDB'] = (True, int(time.time())) #Log.Root("Lock acquired: 'LoadFile'")
@@ -57,7 +59,7 @@ def LoadFileTVDB(id="", filename="", url="", headers={}):
 
   netLocked['LoadFileTVDB'] = (False, 0)  #Log.Root("Lock released: 'LoadFile'")
 
-  return common.LoadFile(filename=filename, relativeDirectory=os.path.join("TheTVDB", "json", id), url=url, headers=common.UpdateDict(headers, TVDB_HEADERS))
+  return common.LoadFile(filename=filename, relativeDirectory=os.path.join("TheTVDB", "json", id), cache=CACHE_1DAY/2, url=url, headers=common.UpdateDict(headers, TVDB_HEADERS))
 
 def GetMetadata(media, movie, error_log, lang, metadata_source, AniDBid, TVDBid, IMDbid, mappingList):
   ''' TVDB - Load serie JSON
