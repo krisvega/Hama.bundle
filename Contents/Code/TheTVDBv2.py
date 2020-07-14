@@ -257,6 +257,9 @@ def GetMetadata(media, movie, error_log, lang, metadata_source, AniDBid, TVDBid,
           if Dict(episode_details_json, 'filename'):
             SaveDict((os.path.join("TheTVDB", "episodes", os.path.basename(Dict(episode_details_json, 'filename'))), 1, None), TheTVDB_dict, 'seasons', season, 'episodes', episode, 'thumbs', str(TVDB_IMG_ROOT+Dict(episode_details_json, 'filename')))
             Log.Info(' - [ ] thumb: {}'.format(TVDB_IMG_ROOT+Dict(episode_details_json, 'filename') if Dict(episode_details_json, 'filename') else ''))
+          elif Dict(episode_json, 'filename'):
+            SaveDict((str("TheTVDB/episodes/"+ os.path.basename(Dict(episode_json, 'filename'))), 1, None), TheTVDB_dict, 'seasons', season, 'episodes', episode, 'thumbs', str(TVDB_IMG_ROOT+Dict(episode_json, 'filename')))
+            Log.Info(' - [ ] thumb: {}'.format(TVDB_IMG_ROOT+Dict(episode_json, 'filename') if Dict(episodes_json, 'filename') else ''))
         
         #Ep title fallback (first lang title come from ep list, second from ep details)
         for lang_rank, language in enumerate(language_episodes[2:rank-1] if len(language_episodes)>1 and rank>=2 and not title else []):
