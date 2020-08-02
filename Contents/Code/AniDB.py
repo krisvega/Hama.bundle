@@ -11,7 +11,7 @@ import time
 from lxml import etree
 # HAMA Modules #
 import common
-from common import Log, DictString, Dict, SaveDict, GetXml # Direct import of heavily used functions
+from common import Log, DictString, Dict, SaveDict, GetXml, GetMultiXml # Direct import of heavily used functions
 import AnimeLists
 
 ### Variables ###
@@ -355,7 +355,7 @@ def GetMetadata(media, movie, error_log, source, AniDBid, TVDBid, AniDBMovieSets
 
       # External IDs
       ANNid = GetXml(xml, "/anime/resources/resource[@type='1']/externalentity/identifier")
-      MALid = GetXml(xml, "/anime/resources/resource[@type='2']/externalentity/identifier")
+      MALid = GetMALid(xml)
       #ANFOid = GetXml(xml, "/anime/resources/resource[@type='3']/externalentity/identifier"), GetXml(xml, "/anime/resources/resource[@type='3']/externalentity/identifier")
     
       # Logs
@@ -415,6 +415,11 @@ def WordsScore(words, title_cleansed):
   score=0
   for word in words:  score+= 100*len(String.LongestCommonSubstring(word, title_cleansed))/max_length
   return score
+
+# AniDB xml can return multiple MAL ids. Return the "oldest" id
+def GetMALid(xml):
+  MALids = GetMultiXml(xml, "/anime/resources/resource[@type='2']/externalentity/identifier")
+  return sorted(MALids, key=common.natural_sort_key)[0] if len(MALids) > 0 else '' # Lowest MAL id should be the id for the main entry
  
 ### Notes ###
 # [].count(True) replaces any() (not declared in Python 2.4, gives "NameError: global name 'any' is not defined")

@@ -156,6 +156,7 @@ Log = PlexLog()
 ### Code reduction one-liners that get imported specifically ###
 #def GetMeta         (source="", field=""            ):  return (downloaded[field]<=1) and (not source or source in Prefs['posters' if field=='seasons' else field]) and not Prefs['posters' if field=='seasons' else field]=="None"
 def GetXml          (xml,      field                ):  return xml.xpath(field)[0].text if xml.xpath(field) and xml.xpath(field)[0].text not in (None, '', 'N/A', 'null') else ''  #allow isdigit() checks
+def GetMultiXml     (xml,      field                ):  return list((item.text for item in xml.xpath(field) if (item.text not in (None, '', 'N/A', 'null'))))
 def urlFilename     (url                            ):  return "/".join(url.split('/')[3:])
 def urlDomain       (url                            ):  return "/".join(url.split('/')[:3])
 def natural_sort_key(s                              ):  return [int(text) if text.isdigit() else text for text in re.split(r'([0-9]+)', str(s).lower())]  # list.sort(key=natural_sort_key) #sorted(list, key=natural_sort_key) - Turn a string into string list of chunks "z23a" -> ["z", 23, "a"]
